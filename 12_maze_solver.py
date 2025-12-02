@@ -1,36 +1,51 @@
 import random
 
-# 迷路生成（前のファイルと同じアルゴリズム）
-def generate_maze(size=9):
+# =========================
+# 迷路生成（再帰的バックトラック）
+# =========================
+def generate_maze(size=21):
+    """
+    再帰的バックトラック（DFS）で perfect maze を生成する。
+    - '#' : 壁
+    - ' ' : 通路
+    - 'S' : スタート
+    - 'G' : ゴール
+    """
+    if size % 2 == 0:
+        raise ValueError("迷路サイズは奇数にしてください (例: 21)")
+
+    # 最初は全部壁
     maze = [['#'] * size for _ in range(size)]
 
-    def carve(x, y, w, h):
-        if w < 3 or h < 3:
-            return
-        if w > h:
-            wx, dy = x + random.randrange(1, w-1, 2), y + random.randrange(0, h, 2)
-            for i in range(y, y+h):
-                maze[i][wx] = '#'
-            maze[dy][wx] = ' '
-            carve(x, y, wx-x, h)
-            carve(wx+1, y, x+w-wx-1, h)
-        else:
-            wy, dx = y + random.randrange(1, h-1, 2), x + random.randrange(0, w, 2)
-            for i in range(x, x+w):
-                maze[wy][i] = '#'
-            maze[wy][dx] = ' '
-            carve(x, y, w, wy-y)
-            carve(x, wy+1, w, y+h-wy-1)
+    # 再帰的に通路を掘る
+    def carve(y, x):
+        maze[y][x] = ' '  # 現在位置を通路に
+        # 2マス先へ進む候補（上下左右）をランダム順に試す
+        directions = [(0, 2), (0, -2), (2, 0), (-2, 0)]
+        random.shuffle(directions)
 
-    for i in range(1, size, 2):
-        for j in range(1, size, 2):
-            maze[i][j] = ' '
+        for dy, dx in directions:
+            ny, nx = y + dy, x + dx
+            # 2マス先が迷路の内側かつまだ壁なら掘り進める
+            if 1 <= ny < size - 1 and 1 <= nx < size - 1 and maze[ny][nx] == '#':
+                # 間の1マスも通路にする
+                maze[y + dy // 2][x + dx // 2] = ' '
+                carve(ny, nx)  # 再帰
 
-    carve(1, 1, size-2, size-2)
-    maze[1][0], maze[size-2][size-1] = 'S', 'G'
+    # (1,1) から掘り始める
+    carve(1, 1)
+
+    # スタートとゴールを外周に開ける
+    maze[1][0] = 'S'                # 左側にスタート
+    maze[1][1] = ' '                # すぐ右は通路
+    maze[size - 2][size - 1] = 'G'  # 右側にゴール
+    maze[size - 2][size - 2] = ' '  # すぐ左は通路
+
     return maze
 
-# 深度優先探索（DFS）による迷路解法
+# =========================
+# 迷路解法（再帰 DFS）
+# =========================
 def solve_maze(maze):
     def dfs(r, c):
         # 境界チェックと訪問済み・壁チェック
@@ -41,33 +56,49 @@ def solve_maze(maze):
         if maze[r][c] == 'G':
             return True
         # 現在位置を訪問済みとしてマーク
+        # （スタートも一時的に '.' になるが、後で復元する）
         maze[r][c] = '.'
-        # 四方向への再帰的探索 - any()で一つでも成功すればTrue
+        # 四方向への再帰的探索 - 1 つでも成功すれば True
         if any(dfs(r+dr, c+dc) for dr, dc in [(0,1), (1,0), (0,-1), (-1,0)]):
             return True
         # バックトラック：探索失敗時は元に戻す
         maze[r][c] = ' '
         return False
 
-    # スタート地点を見つけてDFS開始
+    # スタート地点を見つけて DFS 開始
     for i in range(len(maze)):
         for j in range(len(maze[0])):
-            if maze[i][j] == 'S' and dfs(i, j):
-                maze[i][j] = 'S'  # スタート位置を復元
-                return True
+            if maze[i][j] == 'S':
+                if dfs(i, j):
+                    maze[i][j] = 'S'  # スタート位置を復元
+                    return True
+                else:
+                    return False
     return False
 
+# =========================
+# ユーティリティ
+# =========================
 def print_maze(maze):
     for row in maze:
         print(''.join(row))
 
-# スクリプトが直接実行された場合のみ以下を実行
+# =========================
+# 実行例
+# =========================
 if __name__ == "__main__":
-    print("=== 迷路生成と解答 ===")
-    maze = generate_maze(9)
-    print("生成された迷路:")
+    size = 21
+
+    print("=== 生成された迷路 ===")
+    maze = generate_maze(size)
     print_maze(maze)
 
-    print("\n解答:")
-    solve_maze(maze)  # '.'で解答経路をマーク
-    print_maze(maze)
+    # 解く用にコピー（生成した迷路を残したい場合）
+    maze_solved = [row[:] for row in maze]
+
+    if solve_maze(maze_solved):
+        print("\n=== 解かれた迷路 ('.' が解経路) ===")
+        print_maze(maze_solved)
+    else:
+        print("\n解経路が見つかりませんでした。")
+
