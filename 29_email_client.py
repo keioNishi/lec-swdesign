@@ -1,15 +1,10 @@
+# -*- coding: utf-8 -*-
 """
-電子メール（Email）プロトコルの基礎とクライアント実装
-
-電子メールプロトコル：
-- SMTP (Simple Mail Transfer Protocol): メール送信用プロトコル
-- POP3 (Post Office Protocol 3): メール受信用プロトコル（ダウンロード型）
-- IMAP (Internet Message Access Protocol): メール受信用プロトコル（サーバー型）
+Email Client Demo - Fixed Version
+電子メール（Email）プロトコルの基礎とクライアント実装（修正版）
 """
 
 import smtplib
-import poplib
-import imaplib
 import email
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -17,259 +12,288 @@ from email.mime.base import MIMEBase
 from email import encoders
 import base64
 import os
+import time
 
 
-class EmailClient:
-    """シンプルな電子メールクライアント（学習用）"""
+class EmailClientDemo:
+    """Simple email client demonstration (fixed version)"""
 
     def __init__(self):
-        # デモ用の設定（実際の使用時は適切な設定に変更）
+        # Demo settings (change for actual use)
         self.smtp_server = "smtp.gmail.com"
         self.smtp_port = 587
-        self.pop3_server = "pop.gmail.com"
-        self.pop3_port = 995
-        self.imap_server = "imap.gmail.com"
-        self.imap_port = 993
 
     def create_simple_email(self, sender, recipient, subject, body):
-        """シンプルなテキストメールを作成"""
-        print("=== シンプルなメール作成 ===")
+        """Create simple text email"""
+        print("=== Simple Email Creation ===")
 
-        # MIMETextオブジェクトを作成（テキストメール）
+        # Create MIMEText object (text email)
         message = MIMEText(body, 'plain', 'utf-8')
         message['From'] = sender
         message['To'] = recipient
         message['Subject'] = subject
 
-        print(f"送信者: {sender}")
-        print(f"受信者: {recipient}")
-        print(f"件名: {subject}")
-        print(f"本文: {body[:50]}...")
+        print(f"Sender: {sender}")
+        print(f"Recipient: {recipient}")
+        print(f"Subject: {subject}")
+        print(f"Body: {body[:50]}...")
 
-        # メールの内容を文字列として取得
+        # Get email content as string
         email_content = message.as_string()
-        print(f"\\nメールサイズ: {len(email_content)} bytes")
+        print(f"\nEmail size: {len(email_content)} bytes")
 
         return message
 
     def create_html_email(self, sender, recipient, subject, html_body):
-        """HTMLメールを作成"""
-        print("\\n=== HTMLメール作成 ===")
+        """Create HTML email"""
+        print("\n=== HTML Email Creation ===")
 
-        # マルチパートメッセージを作成
+        # Create multipart message
         message = MIMEMultipart('alternative')
         message['From'] = sender
         message['To'] = recipient
         message['Subject'] = subject
 
-        # HTMLコンテンツを追加
+        # Add HTML content
         html_part = MIMEText(html_body, 'html', 'utf-8')
         message.attach(html_part)
 
-        print(f"HTMLメールが作成されました")
-        print(f"件名: {subject}")
+        print(f"HTML email created")
+        print(f"Subject: {subject}")
 
         return message
 
     def create_multipart_email(self, sender, recipient, subject, text_body, html_body):
-        """テキストとHTMLの両方を含むマルチパートメールを作成"""
-        print("\\n=== マルチパートメール作成 ===")
+        """Create multipart email with both text and HTML"""
+        print("\n=== Multipart Email Creation ===")
 
-        # マルチパートメッセージを作成
+        # Create multipart message
         message = MIMEMultipart('alternative')
         message['From'] = sender
         message['To'] = recipient
         message['Subject'] = subject
 
-        # テキスト版を追加
+        # Add text version
         text_part = MIMEText(text_body, 'plain', 'utf-8')
         message.attach(text_part)
 
-        # HTML版を追加
+        # Add HTML version
         html_part = MIMEText(html_body, 'html', 'utf-8')
         message.attach(html_part)
 
-        print(f"マルチパートメールが作成されました")
-        print(f"テキスト部分: {len(text_body)} 文字")
-        print(f"HTML部分: {len(html_body)} 文字")
+        print(f"Multipart email created")
+        print(f"Text part: {len(text_body)} characters")
+        print(f"HTML part: {len(html_body)} characters")
 
         return message
 
-    def add_attachment(self, message, file_path):
-        """メールに添付ファイルを追加（仮想的な実装）"""
-        print(f"\\n=== 添付ファイル追加（仮想）===")
+    def add_attachment_to_email(self, sender, recipient, subject, body, attachment_name="dummy_file.txt"):
+        """Create email with attachment (fixed implementation)"""
+        print(f"\n=== Email with Attachment Creation ===")
 
-        # 実際のファイルがない場合はダミーデータを作成
-        if not os.path.exists(file_path):
-            # ダミーテキストファイルの内容を作成
-            dummy_content = "これは添付ファイルのダミーデータです。\\n実際の実装では、実在するファイルを使用します。"
+        # Create multipart message for attachments
+        message = MIMEMultipart()
+        message['From'] = sender
+        message['To'] = recipient
+        message['Subject'] = subject
+
+        # Add main body
+        body_part = MIMEText(body, 'plain', 'utf-8')
+        message.attach(body_part)
+
+        # Create dummy file content if file doesn't exist
+        if not os.path.exists(attachment_name):
+            dummy_content = f"This is dummy attachment data for {attachment_name}.\nCreated for demo purposes.\nTimestamp: {time.strftime('%Y-%m-%d %H:%M:%S')}"
             file_data = dummy_content.encode('utf-8')
-            filename = os.path.basename(file_path)
         else:
-            # 実際のファイルを読み込み
-            with open(file_path, 'rb') as f:
+            with open(attachment_name, 'rb') as f:
                 file_data = f.read()
-            filename = os.path.basename(file_path)
 
-        # 添付ファイル部分を作成
+        # Create attachment part
         attachment = MIMEBase('application', 'octet-stream')
         attachment.set_payload(file_data)
         encoders.encode_base64(attachment)
 
-        # ヘッダーを設定
+        # Add header for attachment
         attachment.add_header(
             'Content-Disposition',
-            f'attachment; filename= {filename}'
+            f'attachment; filename= {attachment_name}'
         )
 
-        # メッセージに添付
-        if hasattr(message, 'attach'):
-            message.attach(attachment)
-        else:
-            # シンプルなメッセージの場合、マルチパートに変換
-            multipart_message = MIMEMultipart()
-            multipart_message['From'] = message['From']
-            multipart_message['To'] = message['To']
-            multipart_message['Subject'] = message['Subject']
-            multipart_message.attach(message)
-            multipart_message.attach(attachment)
-            message = multipart_message
+        # Attach to message
+        message.attach(attachment)
 
-        print(f"添付ファイル '{filename}' を追加しました")
-        print(f"ファイルサイズ: {len(file_data)} bytes")
+        print(f"Attachment '{attachment_name}' added")
+        print(f"File size: {len(file_data)} bytes")
 
         return message
 
     def simulate_smtp_send(self, message):
-        """SMTP送信のシミュレーション（実際には送信しない）"""
-        print("\\n=== SMTP送信シミュレーション ===")
+        """Simulate SMTP sending (without actually sending)"""
+        print("\n=== SMTP Send Simulation ===")
 
         try:
-            # メール内容を表示
+            # Display email content
             email_content = message.as_string()
 
-            print("--- メールヘッダー ---")
+            print("--- Email Headers ---")
             print(f"From: {message['From']}")
             print(f"To: {message['To']}")
             print(f"Subject: {message['Subject']}")
             print(f"Date: {message.get('Date', 'Not set')}")
 
-            print("\\n--- メール本文（最初の200文字）---")
-            body_start = email_content.find('\\r\\n\\r\\n')
+            print("\n--- Email Body (first 200 characters) ---")
+            # Find body start
+            body_start = email_content.find('\r\n\r\n')
+            if body_start == -1:
+                body_start = email_content.find('\n\n')
+
             if body_start != -1:
                 body = email_content[body_start + 4:body_start + 204]
                 print(body + "..." if len(body) == 200 else body)
 
-            print(f"\\n総メールサイズ: {len(email_content)} bytes")
-            print("✓ メール送信シミュレーション完了")
+            print(f"\nTotal email size: {len(email_content)} bytes")
+            print("[OK] Email send simulation completed")
 
             return True
 
         except Exception as e:
-            print(f"✗ 送信エラー: {e}")
+            print(f"[ERROR] Send error: {e}")
             return False
 
     def simulate_pop3_receive(self):
-        """POP3受信のシミュレーション"""
-        print("\\n=== POP3受信シミュレーション ===")
+        """Simulate POP3 receiving"""
+        print("\n=== POP3 Receive Simulation ===")
 
-        # ダミーメールデータを作成
+        # Create dummy email data
         dummy_emails = [
             {
                 'from': 'sender1@example.com',
-                'subject': 'テストメール1',
-                'body': 'これは最初のテストメールです。',
+                'subject': 'Test Email 1',
+                'body': 'This is the first test email.',
                 'date': '2024-03-15 10:00:00'
             },
             {
                 'from': 'sender2@example.com',
-                'subject': '重要な連絡',
-                'body': 'こちらは重要な連絡事項です。確認してください。',
+                'subject': 'Important Notice',
+                'body': 'This is an important notice. Please review.',
                 'date': '2024-03-15 11:30:00'
             },
             {
                 'from': 'newsletter@example.com',
-                'subject': 'ニュースレター',
-                'body': '今月のニュースレターをお送りします。',
+                'subject': 'Monthly Newsletter',
+                'body': 'Here is this month\'s newsletter.',
                 'date': '2024-03-15 09:15:00'
             }
         ]
 
-        print(f"受信メール数: {len(dummy_emails)}")
-        print("\\n--- 受信メール一覧 ---")
+        print(f"Received emails: {len(dummy_emails)}")
+        print("\n--- Received Email List ---")
 
         for i, mail in enumerate(dummy_emails, 1):
-            print(f"\\nメール {i}:")
-            print(f"  差出人: {mail['from']}")
-            print(f"  件名: {mail['subject']}")
-            print(f"  日時: {mail['date']}")
-            print(f"  本文: {mail['body'][:30]}...")
+            print(f"\nEmail {i}:")
+            print(f"  From: {mail['from']}")
+            print(f"  Subject: {mail['subject']}")
+            print(f"  Date: {mail['date']}")
+            print(f"  Body: {mail['body'][:30]}...")
 
         return dummy_emails
 
-    def parse_email_headers(self, email_content):
-        """メールヘッダーの解析デモ"""
-        print("\\n=== メールヘッダー解析 ===")
+    def parse_email_headers(self):
+        """Email header parsing demo"""
+        print("\n=== Email Header Parsing ===")
 
-        # サンプルメールを作成
+        # Create sample email
         sample_email = """From: sender@example.com
 To: recipient@example.com
-Subject: =?UTF-8?B?44OG44K544OI44Oh44O844Or?=
+Subject: Test Email Message
 Date: Fri, 15 Mar 2024 10:00:00 +0900
 Message-ID: <12345@example.com>
 Content-Type: text/plain; charset=utf-8
 
-これはサンプルメールの本文です。
-日本語のテキストも含まれています。
+This is a sample email body.
+It contains multiple lines of text.
 """
 
-        # メールオブジェクトを作成
+        # Create email object
         msg = email.message_from_string(sample_email)
 
-        print("--- 解析結果 ---")
-        print(f"差出人: {msg['From']}")
-        print(f"宛先: {msg['To']}")
-        print(f"件名: {email.header.decode_header(msg['Subject'])[0][0]}")
-        print(f"日付: {msg['Date']}")
-        print(f"メッセージID: {msg['Message-ID']}")
+        print("--- Parsing Results ---")
+        print(f"From: {msg['From']}")
+        print(f"To: {msg['To']}")
+        print(f"Subject: {msg['Subject']}")
+        print(f"Date: {msg['Date']}")
+        print(f"Message-ID: {msg['Message-ID']}")
         print(f"Content-Type: {msg['Content-Type']}")
 
-        # メール本文を取得
+        # Get email body
         if msg.is_multipart():
             for part in msg.walk():
                 if part.get_content_type() == "text/plain":
                     body = part.get_payload(decode=True).decode('utf-8')
-                    print(f"\\n本文:\\n{body}")
+                    print(f"\nBody:\n{body}")
                     break
         else:
-            body = msg.get_payload(decode=True).decode('utf-8')
-            print(f"\\n本文:\\n{body}")
+            body = msg.get_payload()
+            print(f"\nBody:\n{body}")
+
+    def create_test_attachment_file(self, filename="25_test_attachment.txt"):
+        """Create a test attachment file"""
+        print(f"\n=== Creating Test Attachment File: {filename} ===")
+
+        content = f"""Test Attachment File
+Created for Email Demo
+=====================
+
+This is a test attachment file created for demonstrating email attachments.
+
+Filename: {filename}
+Created: {time.strftime('%Y-%m-%d %H:%M:%S')}
+Purpose: Educational demonstration
+
+Content includes:
+- Text data
+- Timestamp information
+- File metadata
+
+This file can be safely deleted after the demo.
+"""
+
+        try:
+            with open(filename, 'w', encoding='utf-8') as f:
+                f.write(content)
+            print(f"[OK] Test file '{filename}' created successfully")
+            print(f"File size: {len(content)} characters")
+            return filename
+        except Exception as e:
+            print(f"[ERROR] Failed to create test file: {e}")
+            return None
 
 
 def main():
-    """メインデモ関数"""
-    print("電子メールプロトコル基礎デモ")
-    print("=" * 40)
+    """Main demo function"""
+    print("Email Protocol Basic Demo (Fixed Version)")
+    print("=" * 50)
 
-    client = EmailClient()
+    client = EmailClientDemo()
 
-    # 1. シンプルなテキストメール作成
+    # 1. Create simple text email
     simple_mail = client.create_simple_email(
         sender="test@example.com",
         recipient="recipient@example.com",
-        subject="テストメール",
-        body="これはテストメールの本文です。\\n改行も含まれています。"
+        subject="Test Email",
+        body="This is a test email body.\nIt includes line breaks."
     )
 
-    # 2. HTMLメール作成
+    # 2. Create HTML email
     html_body = """
     <html>
     <body>
-        <h1>HTMLメールのテスト</h1>
-        <p>これは<strong>HTML形式</strong>のメールです。</p>
+        <h1>HTML Email Test</h1>
+        <p>This is an <strong>HTML format</strong> email.</p>
         <ul>
-            <li>リスト項目1</li>
-            <li>リスト項目2</li>
+            <li>List item 1</li>
+            <li>List item 2</li>
         </ul>
     </body>
     </html>
@@ -278,36 +302,61 @@ def main():
     html_mail = client.create_html_email(
         sender="test@example.com",
         recipient="recipient@example.com",
-        subject="HTMLテストメール",
+        subject="HTML Test Email",
         html_body=html_body
     )
 
-    # 3. マルチパートメール作成
-    text_body = "これはテキスト版のメールです。"
+    # 3. Create multipart email
+    text_body = "This is the text version of the email."
     multipart_mail = client.create_multipart_email(
         sender="test@example.com",
         recipient="recipient@example.com",
-        subject="マルチパートテスト",
+        subject="Multipart Test",
         text_body=text_body,
         html_body=html_body
     )
 
-    # 4. 添付ファイル付きメール（仮想）
-    attachment_mail = client.add_attachment(simple_mail, "dummy_file.txt")
+    # 4. Create test attachment file
+    test_file = client.create_test_attachment_file()
 
-    # 5. SMTP送信シミュレーション
+    # 5. Create email with attachment (fixed implementation)
+    if test_file:
+        attachment_mail = client.add_attachment_to_email(
+            sender="test@example.com",
+            recipient="recipient@example.com",
+            subject="Email with Attachment",
+            body="This email contains an attachment.",
+            attachment_name=test_file
+        )
+    else:
+        attachment_mail = client.add_attachment_to_email(
+            sender="test@example.com",
+            recipient="recipient@example.com",
+            subject="Email with Dummy Attachment",
+            body="This email contains a dummy attachment."
+        )
+
+    # 6. SMTP send simulation
     client.simulate_smtp_send(multipart_mail)
 
-    # 6. POP3受信シミュレーション
+    # 7. POP3 receive simulation
     received_emails = client.simulate_pop3_receive()
 
-    # 7. メールヘッダー解析
-    client.parse_email_headers("")
+    # 8. Email header parsing
+    client.parse_email_headers()
 
-    print("\\n" + "=" * 40)
-    print("電子メールデモ完了")
-    print("\\n注意: このデモは学習目的のシミュレーションです。")
-    print("実際のメール送受信には適切な認証情報とセキュリティ設定が必要です。")
+    print("\n" + "=" * 50)
+    print("Email demo completed")
+    print("\nNote: This demo is for educational purposes.")
+    print("Actual email sending requires proper authentication and security settings.")
+
+    # Clean up test file
+    if test_file and os.path.exists(test_file):
+        try:
+            os.remove(test_file)
+            print(f"\nTest file '{test_file}' cleaned up.")
+        except:
+            print(f"\nNote: You may manually delete '{test_file}' if needed.")
 
 
 if __name__ == "__main__":

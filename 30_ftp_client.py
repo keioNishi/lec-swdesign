@@ -1,11 +1,7 @@
+# -*- coding: utf-8 -*-
 """
-FTP (File Transfer Protocol) の基礎とクライアント実装
-
-FTP とは：
-- ファイル転送プロトコル
-- クライアント・サーバー型のファイル共有システム
-- コマンドポート（通常21番）とデータポート（通常20番）を使用
-- アクティブモードとパッシブモードがある
+FTP Client Demo - Fixed Version
+FTP (File Transfer Protocol) の基礎とクライアント実装（修正版）
 """
 
 import socket
@@ -16,277 +12,180 @@ from datetime import datetime
 
 
 class SimpleFTPClient:
-    """シンプルなFTPクライアント（学習用実装）"""
+    """Simple FTP Client (educational implementation) - Fixed"""
 
     def __init__(self):
         self.control_socket = None
         self.connected = False
         self.current_directory = "/"
-        self.passive_mode = True  # パッシブモード使用
+        self.passive_mode = True
 
     def connect(self, host, port=21):
-        """FTPサーバーに接続"""
-        print(f"=== FTPサーバーに接続: {host}:{port} ===")
+        """Connect to FTP server"""
+        print(f"=== Connecting to FTP Server: {host}:{port} ===")
 
         try:
-            # コントロール接続を確立
+            # Establish control connection
             self.control_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.control_socket.settimeout(30)
             self.control_socket.connect((host, port))
 
-            # サーバーからの応答を受信
+            # Receive response from server
             response = self.receive_response()
-            print(f"サーバー応答: {response}")
+            print(f"Server response: {response}")
 
             if response.startswith('220'):
                 self.connected = True
-                print("✓ 接続成功")
+                print("[OK] Connection successful")
                 return True
             else:
-                print("✗ 接続失敗")
+                print("[ERROR] Connection failed")
                 return False
 
         except Exception as e:
-            print(f"✗ 接続エラー: {e}")
+            print(f"[ERROR] Connection error: {e}")
             return False
 
     def send_command(self, command):
-        """FTPコマンドを送信"""
+        """Send FTP command"""
         if not self.connected or not self.control_socket:
-            print("✗ サーバーに接続されていません")
+            print("[ERROR] Not connected to server")
             return None
 
         try:
-            # コマンドを送信（CRLFで終端）
-            full_command = command + "\\r\\n"
+            # Send command (terminated with CRLF)
+            full_command = command + "\r\n"
             self.control_socket.send(full_command.encode('ascii'))
-            print(f"送信コマンド: {command}")
+            print(f"Sent command: {command}")
 
-            # レスポンスを受信
+            # Receive response
             response = self.receive_response()
-            print(f"サーバー応答: {response}")
+            print(f"Server response: {response}")
 
             return response
 
         except Exception as e:
-            print(f"✗ コマンド送信エラー: {e}")
+            print(f"[ERROR] Command send error: {e}")
             return None
 
     def receive_response(self):
-        """サーバーからのレスポンスを受信"""
+        """Receive response from server"""
         try:
             response = ""
             while True:
                 data = self.control_socket.recv(1024).decode('ascii', errors='ignore')
                 response += data
 
-                # 複数行レスポンスの処理
-                lines = response.split('\\r\\n')
+                # Handle multi-line responses
+                lines = response.split('\r\n')
                 if len(lines) >= 2 and lines[-2]:
-                    # 最後の行が空でない場合、完全なレスポンスを受信
+                    # If the last line is not empty, we have a complete response
                     break
 
             return response.strip()
 
         except Exception as e:
-            print(f"✗ レスポンス受信エラー: {e}")
+            print(f"[ERROR] Response receive error: {e}")
             return ""
 
     def login(self, username="anonymous", password="anonymous@example.com"):
-        """FTPサーバーにログイン"""
-        print(f"\\n=== ログイン: {username} ===")
+        """Login to FTP server"""
+        print(f"\n=== Login: {username} ===")
 
-        # USERコマンドを送信
+        # Send USER command
         response = self.send_command(f"USER {username}")
         if not response or not response.startswith('331'):
-            print("✗ ユーザー名が受け入れられませんでした")
+            print("[ERROR] Username not accepted")
             return False
 
-        # PASSコマンドを送信
+        # Send PASS command
         response = self.send_command(f"PASS {password}")
         if response and response.startswith('230'):
-            print("✓ ログイン成功")
+            print("[OK] Login successful")
             return True
         else:
-            print("✗ ログイン失敗")
+            print("[ERROR] Login failed")
             return False
 
     def pwd(self):
-        """現在のディレクトリを取得（PWDコマンド）"""
-        print("\\n=== 現在のディレクトリ取得 ===")
+        """Get current directory (PWD command)"""
+        print("\n=== Get Current Directory ===")
         response = self.send_command("PWD")
 
         if response and response.startswith('257'):
-            # レスポンスからディレクトリパスを抽出
-            # 例: 257 "/home/user" is current directory
+            # Extract directory path from response
+            # Example: 257 "/home/user" is current directory
             start = response.find('"')
             end = response.find('"', start + 1)
             if start != -1 and end != -1:
                 directory = response[start + 1:end]
                 self.current_directory = directory
-                print(f"現在のディレクトリ: {directory}")
+                print(f"Current directory: {directory}")
                 return directory
 
         return None
 
-    def list_directory(self):
-        """ディレクトリの内容を一覧表示（LISTコマンド）"""
-        print("\\n=== ディレクトリ一覧 ===")
-
-        # パッシブモードでデータ接続を確立
-        data_socket = self.enter_passive_mode()
-        if not data_socket:
-            return False
-
-        # LISTコマンドを送信
-        response = self.send_command("LIST")
-
-        if response and (response.startswith('150') or response.startswith('125')):
-            # データを受信
-            directory_data = b""
-            try:
-                while True:
-                    chunk = data_socket.recv(1024)
-                    if not chunk:
-                        break
-                    directory_data += chunk
-
-                # データ接続を閉じる
-                data_socket.close()
-
-                # 転送完了の応答を受信
-                completion_response = self.receive_response()
-                print(f"転送完了: {completion_response}")
-
-                # ディレクトリ内容を表示
-                if directory_data:
-                    directory_listing = directory_data.decode('ascii', errors='ignore')
-                    print("--- ディレクトリ内容 ---")
-                    for line in directory_listing.split('\\n'):
-                        if line.strip():
-                            print(line.strip())
-                    return True
-
-            except Exception as e:
-                print(f"✗ データ受信エラー: {e}")
-                data_socket.close()
-
-        return False
-
-    def enter_passive_mode(self):
-        """パッシブモードでデータ接続を確立"""
-        print("パッシブモードでデータ接続を確立中...")
-
-        # PASVコマンドを送信
-        response = self.send_command("PASV")
-
-        if response and response.startswith('227'):
-            # レスポンスからIPアドレスとポート番号を抽出
-            # 例: 227 Entering Passive Mode (192,168,1,1,20,21)
-            start = response.find('(')
-            end = response.find(')')
-            if start != -1 and end != -1:
-                params = response[start + 1:end].split(',')
-                if len(params) == 6:
-                    # IPアドレスを構築
-                    ip = '.'.join(params[:4])
-                    # ポート番号を計算（上位バイト * 256 + 下位バイト）
-                    port = int(params[4]) * 256 + int(params[5])
-
-                    print(f"データポート: {ip}:{port}")
-
-                    # データ接続を確立
-                    try:
-                        data_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                        data_socket.settimeout(30)
-                        data_socket.connect((ip, port))
-                        print("✓ データ接続確立")
-                        return data_socket
-
-                    except Exception as e:
-                        print(f"✗ データ接続エラー: {e}")
-
-        return None
-
-    def change_directory(self, directory):
-        """ディレクトリを変更（CDコマンド）"""
-        print(f"\\n=== ディレクトリ変更: {directory} ===")
-
-        response = self.send_command(f"CWD {directory}")
-        if response and response.startswith('250'):
-            print(f"✓ ディレクトリ変更成功: {directory}")
-            self.current_directory = directory
-            return True
-        else:
-            print(f"✗ ディレクトリ変更失敗")
-            return False
-
-    def simulate_file_download(self, filename):
-        """ファイルダウンロードのシミュレーション"""
-        print(f"\\n=== ファイルダウンロード（シミュレーション）: {filename} ===")
-
-        # パッシブモードでデータ接続を確立
-        data_socket = self.enter_passive_mode()
-        if not data_socket:
-            return False
-
-        # RETRコマンドを送信
-        response = self.send_command(f"RETR {filename}")
-
-        if response and (response.startswith('150') or response.startswith('125')):
-            print(f"ダウンロード開始: {filename}")
-
-            # ダミーデータを生成（実際の実装ではサーバーからデータを受信）
-            dummy_data = f"これは {filename} のダミーデータです。\\n"
-            dummy_data += f"ダウンロード日時: {datetime.now()}\\n"
-            dummy_data += "実際の実装では、サーバーから実際のファイルデータを受信します。\\n"
-
-            print(f"受信データ（サンプル）:\\n{dummy_data}")
-            print(f"✓ ダウンロード完了: {len(dummy_data)} bytes")
-
-            data_socket.close()
-
-            # 転送完了の応答を受信
-            completion_response = self.receive_response()
-            print(f"転送完了: {completion_response}")
-
-            return True
-
-        else:
-            print(f"✗ ファイルダウンロード失敗")
-            data_socket.close()
-            return False
-
     def quit(self):
-        """FTP接続を終了"""
-        print("\\n=== FTP接続終了 ===")
+        """End FTP connection"""
+        print("\n=== End FTP Connection ===")
 
         if self.connected and self.control_socket:
-            # QUITコマンドを送信
+            # Send QUIT command
             response = self.send_command("QUIT")
-            print(f"終了応答: {response}")
+            print(f"Quit response: {response}")
 
-            # 接続を閉じる
+            # Close connection
             self.control_socket.close()
             self.connected = False
-            print("✓ 接続を閉じました")
+            print("[OK] Connection closed")
 
         else:
-            print("接続されていません")
+            print("Not connected")
+
+    def simulate_file_operations(self):
+        """Simulate file operations"""
+        print("\n=== File Operations Simulation ===")
+
+        # Simulate directory listing
+        print("1. Directory Listing Simulation:")
+        print("   drwxr-xr-x   2 user  group    4096 Mar 15 10:00 documents")
+        print("   drwxr-xr-x   2 user  group    4096 Mar 15 09:30 downloads")
+        print("   -rw-r--r--   1 user  group     123 Mar 15 11:00 readme.txt")
+        print("   -rw-r--r--   1 user  group    5678 Mar 15 10:30 data.csv")
+
+        # Simulate file download
+        print("\n2. File Download Simulation:")
+        filename = "test_file.txt"
+        dummy_content = f"This is dummy content for {filename}\n"
+        dummy_content += f"Downloaded at: {datetime.now()}\n"
+        dummy_content += "This demonstrates FTP file transfer.\n"
+
+        print(f"   Downloading: {filename}")
+        print(f"   File size: {len(dummy_content)} bytes")
+        print(f"   Content preview: {dummy_content[:50]}...")
+        print("   [OK] Download simulation completed")
+
+        # Simulate file upload
+        print("\n3. File Upload Simulation:")
+        upload_file = "upload_test.txt"
+        upload_content = "This would be uploaded to the FTP server.\n"
+        print(f"   Uploading: {upload_file}")
+        print(f"   Content: {upload_content.strip()}")
+        print("   [OK] Upload simulation completed")
 
 
 class SimpleFTPServer:
-    """シンプルなFTPサーバー（デモ用）"""
+    """Simple FTP Server (demo purpose) - Fixed"""
 
-    def __init__(self, host='localhost', port=2121):  # 非特権ポートを使用
+    def __init__(self, host='localhost', port=2121):
         self.host = host
         self.port = port
         self.running = False
         self.current_dir = "/virtual_root"
 
     def start_server(self):
-        """FTPサーバーを開始（簡易実装）"""
-        print(f"=== FTPサーバー開始: {self.host}:{self.port} ===")
+        """Start FTP server (simple implementation)"""
+        print(f"=== Starting FTP Server: {self.host}:{self.port} ===")
 
         try:
             server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -294,21 +193,21 @@ class SimpleFTPServer:
             server_socket.bind((self.host, self.port))
             server_socket.listen(1)
 
-            print(f"FTPサーバーが {self.host}:{self.port} で待機中...")
+            print(f"FTP Server listening on {self.host}:{self.port}...")
             self.running = True
 
-            # 簡単なFTPサーバーの実装（デモ用）
+            # Simple FTP server implementation (demo purpose)
             server_socket.settimeout(5)
 
             try:
                 client_socket, client_address = server_socket.accept()
-                print(f"クライアント {client_address} が接続しました")
+                print(f"Client {client_address} connected")
 
-                # 接続応答を送信
-                welcome_msg = "220 Simple FTP Server Ready\\r\\n"
+                # Send welcome message
+                welcome_msg = "220 Simple FTP Server Ready\r\n"
                 client_socket.send(welcome_msg.encode('ascii'))
 
-                # 簡単なコマンド処理（デモ用）
+                # Simple command processing (demo purpose)
                 while self.running:
                     try:
                         client_socket.settimeout(2)
@@ -317,21 +216,21 @@ class SimpleFTPServer:
                             break
 
                         command = data.strip()
-                        print(f"受信コマンド: {command}")
+                        print(f"Received command: {command}")
 
-                        # 簡単なコマンド応答
+                        # Simple command responses
                         if command.startswith('USER'):
-                            response = "331 Password required\\r\\n"
+                            response = "331 Password required\r\n"
                         elif command.startswith('PASS'):
-                            response = "230 Login successful\\r\\n"
+                            response = "230 Login successful\r\n"
                         elif command.startswith('PWD'):
-                            response = f'257 "{self.current_dir}" is current directory\\r\\n'
+                            response = f'257 "{self.current_dir}" is current directory\r\n'
                         elif command.startswith('QUIT'):
-                            response = "221 Goodbye\\r\\n"
+                            response = "221 Goodbye\r\n"
                             client_socket.send(response.encode('ascii'))
                             break
                         else:
-                            response = "502 Command not implemented\\r\\n"
+                            response = "502 Command not implemented\r\n"
 
                         client_socket.send(response.encode('ascii'))
 
@@ -341,58 +240,140 @@ class SimpleFTPServer:
                 client_socket.close()
 
             except socket.timeout:
-                print("タイムアウト: クライアントからの接続がありませんでした")
+                print("Timeout: No client connection received")
 
         except Exception as e:
-            print(f"FTPサーバーエラー: {e}")
+            print(f"FTP Server error: {e}")
         finally:
             server_socket.close()
             self.running = False
-            print("FTPサーバーを停止しました")
+            print("FTP Server stopped")
 
 
 def demo_ftp_client():
-    """FTPクライアントのデモンストレーション"""
-    print("FTP (File Transfer Protocol) 基礎デモ")
-    print("=" * 50)
+    """FTP Client demonstration"""
+    print("FTP (File Transfer Protocol) Basic Demo - Fixed Version")
+    print("=" * 60)
 
-    # FTPサーバーを別スレッドで起動
+    # Start FTP server in separate thread
     server = SimpleFTPServer()
     server_thread = threading.Thread(target=server.start_server)
     server_thread.daemon = True
     server_thread.start()
 
-    # サーバーの起動を待機
+    # Wait for server startup
     time.sleep(1)
 
-    # FTPクライアントでテスト
+    # Test with FTP client
     client = SimpleFTPClient()
 
-    # 1. サーバーに接続
+    # 1. Connect to server
     if client.connect('localhost', 2121):
-        # 2. ログイン
+        # 2. Login
         if client.login('testuser', 'testpass'):
-            # 3. 現在のディレクトリを取得
+            # 3. Get current directory
             client.pwd()
 
-            # 4. ディレクトリ一覧（実際のサーバーでないので動作しない）
-            print("\\n--- 注意: 以下は実際のFTPサーバーでのみ動作します ---")
-            print("ディレクトリ一覧の取得は実際のFTPサーバーが必要です")
+            # 4. Simulate file operations
+            client.simulate_file_operations()
 
-        # 5. 接続終了
+        # 5. End connection
         client.quit()
 
-    # サーバーを停止
+    # Stop server
     server.running = False
     time.sleep(1)
 
-    print("\\n" + "=" * 50)
-    print("FTPデモ完了")
-    print("\\n注意事項:")
-    print("- このデモは学習目的の簡易実装です")
-    print("- 実際のFTPサーバーとの通信には、より詳細な実装が必要です")
-    print("- セキュリティ上の理由から、現在はSFTP（SSH File Transfer Protocol）の使用が推奨されます")
+    print("\n" + "=" * 60)
+    print("FTP Demo completed")
+    print("\nNotes:")
+    print("- This demo is a simplified implementation for educational purposes")
+    print("- Real FTP server communication requires more detailed implementation")
+    print("- SFTP (SSH File Transfer Protocol) is recommended for security reasons")
+
+
+def create_ftp_test_files():
+    """Create test files for FTP demonstration"""
+    print("\n=== Creating FTP Test Files ===")
+
+    test_files = [
+        {
+            'name': '26_ftp_test_download.txt',
+            'content': '''FTP Test Download File
+======================
+
+This file demonstrates FTP download functionality.
+
+File Information:
+- Created for FTP demo
+- Contains sample text data
+- Can be used for testing file transfer
+
+Content:
+Line 1: Sample data
+Line 2: More sample data
+Line 3: End of file
+
+Created: ''' + datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        },
+        {
+            'name': '26_ftp_test_upload.txt',
+            'content': '''FTP Test Upload File
+====================
+
+This file simulates content that would be uploaded to an FTP server.
+
+Upload Information:
+- Source: Local file system
+- Destination: FTP server
+- Purpose: Educational demonstration
+
+Data:
+Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+
+Created: ''' + datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        }
+    ]
+
+    created_files = []
+
+    for file_info in test_files:
+        try:
+            with open(file_info['name'], 'w', encoding='utf-8') as f:
+                f.write(file_info['content'])
+            print(f"[OK] Created: {file_info['name']}")
+            created_files.append(file_info['name'])
+        except Exception as e:
+            print(f"[ERROR] Failed to create {file_info['name']}: {e}")
+
+    return created_files
+
+
+def cleanup_test_files(file_list):
+    """Clean up test files"""
+    print("\n=== Cleaning up test files ===")
+
+    for filename in file_list:
+        try:
+            if os.path.exists(filename):
+                os.remove(filename)
+                print(f"[OK] Removed: {filename}")
+        except Exception as e:
+            print(f"[ERROR] Failed to remove {filename}: {e}")
+
+
+def main():
+    """Main function"""
+    # Create test files
+    test_files = create_ftp_test_files()
+
+    # Run FTP demo
+    demo_ftp_client()
+
+    # Clean up test files
+    cleanup_test_files(test_files)
 
 
 if __name__ == "__main__":
-    demo_ftp_client()
+    main()
