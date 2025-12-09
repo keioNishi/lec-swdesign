@@ -232,7 +232,16 @@
 
 ### 7. ネットワークプログラミング
 
-#### 26_network_client_server.py
+#### 26_socket_programming_basics.py
+- **概要**: ソケットプログラミングの基礎概念と実装
+- **内容**: TCP/UDPソケット作成、クライアント・サーバー通信
+- **実装**:
+  - TCP/UDPソケットの作成と設定
+  - エコーサーバーとクライアント
+  - ソケット通信の基本パターン
+- **補助ファイル**: `socket_programming_basics_jp.py`（日本語版）, `28_test_socket_demo.py`
+
+#### 27_network_client_server.py
 - **概要**: ソケット通信によるクライアント・サーバモデルの基礎
 - **内容**: ローカルホスト上の TCP 接続、レスポンス処理、エラーハンドリング
 - **実装**:
@@ -240,43 +249,34 @@
   - クライアントからのメッセージ送受信
   - 存在しないポートへの接続失敗シナリオ
 
-#### 27_socket_programming_basics.py
-- **概要**: ソケットプログラミングの基礎概念と実装
-- **内容**: TCP/UDPソケット作成、クライアント・サーバー通信
-- **実装**:
-  - TCP/UDPソケットの作成と設定
-  - エコーサーバーとクライアント
-  - ソケット通信の基本パターン
-- **補助ファイル**: `socket_programming_basics_23.py`, `27_test_socket_demo.py`
-
-#### 28_http_client_server.py
+#### 29_http_client_server.py
 - **概要**: HTTP プロトコルを使ったクライアント・サーバー通信
 - **内容**: HTTPリクエスト・レスポンス、JSON API、404エラー処理
 - **実装**:
   - 簡易HTTPサーバーの実装
   - HTTPクライアントによるリクエスト送信
   - JSONデータの送受信
-- **補助ファイル**: `28_simple_web_server.py`（独立動作可能なWebサーバー）
+- **補助ファイル**: `29_simple_web_server.py`（独立動作可能なWebサーバー）
 
-#### 29_email_client.py
+#### 30_email_client.py
 - **概要**: 電子メールクライアントの実装
 - **内容**: メール作成、添付ファイル、SMTP/POP3シミュレーション
 - **実装**:
   - MIME形式でのメール作成
   - 添付ファイルの処理
   - メールサーバーとの通信シミュレーション
-- **修正版**: `29_email_client_fixed.py`（添付ファイル処理のバグ修正版）
+- **修正版**: `30_email_client_fixed.py`（添付ファイル処理のバグ修正版）
 
-#### 30_ftp_client.py
+#### 31_ftp_client.py
 - **概要**: FTPクライアントの実装
 - **内容**: FTP接続、認証、ファイル操作シミュレーション
 - **実装**:
   - FTPサーバーへの接続と認証
   - ファイルのアップロード・ダウンロード
   - ディレクトリ操作
-- **修正版**: `30_ftp_client_fixed.py`（Unicode文字問題修正版）
+- **修正版**: `31_ftp_client_fixed.py`（Unicode文字問題修正版）
 
-#### 31_dns_resolution.py
+#### 32_dns_resolution.py
 - **概要**: DNS名前解決の実装
 - **内容**: ドメイン名からIPアドレスへの変換
 - **実装**:
@@ -284,7 +284,7 @@
   - 逆引きDNSの実装
   - DNSキャッシュの概念
 
-#### 32_web_scraping.py
+#### 33_web_scraping.py
 - **概要**: Webスクレイピングの実装
 - **内容**: HTMLパース、正規表現抽出、データ保存
 - **実装**:
@@ -292,7 +292,7 @@
   - 正規表現によるデータ抽出
   - JSONファイルへのデータ保存
 
-#### 33_network_protocols.py
+#### 34_network_protocols.py
 - **概要**: ネットワークプロトコルの基礎
 - **内容**: TCP/UDP通信デモ、プロトコルスタック説明
 - **実装**:
@@ -300,7 +300,7 @@
   - TCP/UDP通信の比較
   - ネットワーク層の理解
 
-#### 34_network_security_basics.py
+#### 35_network_security_basics.py
 - **概要**: ネットワークセキュリティの基礎
 - **内容**: 暗号化、SSL接続、認証機能
 - **実装**:
@@ -308,7 +308,7 @@
   - SSL/TLS接続の概念
   - セキュアな通信の実装
 
-#### 35_network_performance.py
+#### 36_network_performance.py
 - **概要**: ネットワークパフォーマンス測定
 - **内容**: レイテンシ測定、スループット測定、輻輳シミュレーション
 - **実装**:
@@ -318,7 +318,7 @@
 
 ### 8. データベース操作
 
-#### 36_run_database_examples.py
+#### 37_run_database_examples.py
 - **概要**: データベース操作の実行スクリプト
 - **内容**: PostgreSQL接続とサンプルクエリの実行
 - **実装**:
@@ -326,7 +326,7 @@
   - サンプルデータの挿入・更新・削除
   - クエリ結果の表示
 
-#### 37_test_postgresql_connection.py
+#### 38_test_postgresql_connection.py
 - **概要**: PostgreSQL接続テスト
 - **内容**: データベース接続の確認
 - **実装**:
@@ -334,7 +334,7 @@
   - 接続状態の確認
   - エラーハンドリング
 
-#### 38_verify_database_setup.py
+#### 39_verify_database_setup.py
 - **概要**: データベースセットアップの検証
 - **内容**: データベース環境の確認
 - **実装**:
@@ -344,7 +344,7 @@
 
 ### 9. セキュリティ
 
-#### 46_security_basics.py
+#### 47_security_basics.py
 - **概要**: 情報セキュリティの三要素（CIAトライアド）の基本概念デモ
 - **内容**: 認証、ハッシュによる完全性確認、可用性ステータスの出力
 - **実装**:
@@ -352,7 +352,7 @@
   - SHA-256 を用いたハッシュ生成
   - システム稼働状態の確認データ
 
-#### 47_input_validation.py
+#### 48_input_validation.py
 - **概要**: 入力値検証による代表的な脆弱性（XSS/SQLi）対策
 - **内容**: 正規表現とホワイトリスト方式によるバリデーション
 - **実装**:
@@ -360,7 +360,7 @@
   - 危険文字のサニタイズ
   - パスワード強度判定と SQL インジェクション検知
 
-#### 48_encryption_basics.py
+#### 49_encryption_basics.py
 - **概要**: 共有鍵暗号と暗号化キーの取り扱い（Fernet）
 - **内容**: メッセージの暗号化/復号およびキー生成デモ
 - **実装**:
@@ -368,7 +368,7 @@
   - 異なるキーでの復号失敗デモ
   - 代替として `hashlib` によるハッシュ例を同梱
 
-#### 49_log_analysis.py
+#### 50_log_analysis.py
 - **概要**: Web アクセスログからの異常検知
 - **内容**: アクセス頻度分析、ブルートフォース検知、推奨対策出力
 - **実装**:
@@ -376,7 +376,7 @@
   - 疑わしいパターンの抽出
   - セキュリティ勧告メッセージの表示
 
-#### 50_network_security.py
+#### 51_network_security.py
 - **概要**: ポートスキャン、IP 評判確認、監視シミュレーション
 - **内容**: ネットワーク監視基盤の基礎機能デモ
 - **実装**:
@@ -384,7 +384,7 @@
   - 擬似的な IP 評判データベース
   - シンプルなイベントストリーム解析
 
-#### 51_secure_communication.py
+#### 52_secure_communication.py
 - **概要**: 安全な通信チャネル確立のための暗号化実装
 - **内容**: 鍵交換、署名、暗号化メッセージ送受信のデモ
 - **実装**:
@@ -392,7 +392,7 @@
   - HMAC によるメッセージ完全性検証
   - 擬似セッションハンドシェイク
 
-#### 52_access_control.py
+#### 53_access_control.py
 - **概要**: 役割ベースアクセス制御（RBAC）の実践例
 - **内容**: 認証、権限管理、監査ログ、アカウントロック
 - **実装**:
@@ -400,7 +400,7 @@
   - ログイン失敗によるロックアウト
   - 監査レポート生成
 
-#### 53_multi_factor_auth.py
+#### 54_multi_factor_auth.py
 - **概要**: 多要素認証（MFA）ワークフローの統合例
 - **内容**: パスワードハッシュ化、OTP 生成・検証、バックアップコード管理
 - **実装**:
@@ -408,7 +408,7 @@
   - OTP 送信と再試行制限
   - MFA 設定変更と統計集計
 
-#### 54_intrusion_detection.py
+#### 55_intrusion_detection.py
 - **概要**: シグネチャベース侵入検知システム（IDS）のミニ実装
 - **内容**: 攻撃パターン検出、接続追跡、ブロックリスト運用
 - **実装**:
@@ -433,18 +433,18 @@ python 24_astar_simple.py
 python 25_graph_visualization.py
 
 # ネットワークプログラミング
-python 26_network_client_server.py
-python 27_socket_programming_basics.py
-python 28_http_client_server.py
+python 26_socket_programming_basics.py
+python 27_network_client_server.py
+python 29_http_client_server.py
 
 # データベース関連
-python 36_run_database_examples.py
-python 37_test_postgresql_connection.py
-python 38_verify_database_setup.py
+python 37_run_database_examples.py
+python 38_test_postgresql_connection.py
+python 39_verify_database_setup.py
 
 # セキュリティ関連
-python 46_security_basics.py
-python 47_input_validation.py
+python 47_security_basics.py
+python 48_input_validation.py
 # ... 以下同様
 ```
 
@@ -471,23 +471,23 @@ pip install psycopg2-binary  # PostgreSQL用
 $env:PYTHONIOENCODING = 'utf-8'
 
 # 基本的なソケット通信
-python 26_network_client_server.py
-python 27_socket_programming_basics.py
+python 26_socket_programming_basics.py
+python 27_network_client_server.py
 
 # HTTP通信（Webサーバー起動）
-python 28_simple_web_server.py  # ブラウザで http://localhost:8888 にアクセス
-python 28_http_client_server.py
+python 29_simple_web_server.py  # ブラウザで http://localhost:8888 にアクセス
+python 29_http_client_server.py
 
 # 修正版ファイルの実行（推奨）
-python 29_email_client_fixed.py
-python 30_ftp_client_fixed.py
+python 30_email_client_fixed.py
+python 31_ftp_client_fixed.py
 
 # その他のネットワーク機能
-python 31_dns_resolution.py
-python 32_web_scraping.py
-python 33_network_protocols.py
-python 34_network_security_basics.py
-python 35_network_performance.py
+python 32_dns_resolution.py
+python 33_web_scraping.py
+python 34_network_protocols.py
+python 35_network_security_basics.py
+python 36_network_performance.py
 ```
 
 ### セキュリティスクリプトの実行方法
@@ -500,19 +500,19 @@ $env:PYTHONIOENCODING = 'utf-8'
 python -m pip install --user cryptography
 
 # セキュリティ基礎
-python 46_security_basics.py
-python 47_input_validation.py
-python 48_encryption_basics.py
+python 47_security_basics.py
+python 48_input_validation.py
+python 49_encryption_basics.py
 
 # ログ解析・ネットワーク監視
-python 49_log_analysis.py
-python 50_network_security.py
-python 51_secure_communication.py
+python 50_log_analysis.py
+python 51_network_security.py
+python 52_secure_communication.py
 
 # アクセス制御・認証
-python 52_access_control.py
-python 53_multi_factor_auth.py
-python 54_intrusion_detection.py
+python 53_access_control.py
+python 54_multi_factor_auth.py
+python 55_intrusion_detection.py
 ```
 
 ### 実行時の注意事項
@@ -523,9 +523,9 @@ python 54_intrusion_detection.py
 - 生成される画像: `algorithm_comparison.png`, `maze_solution.png`
 
 #### ネットワークプログラミング関連
-- `26_network_client_server.py` は単体でサーバとクライアントの接続検証を完了し、終了時にサーバスレッドを停止します
-- `28_simple_web_server.py` は独立したWebサーバーとして動作し、ブラウザからアクセス可能です
-- `50_network_security.py` はローカルポートスキャンを行うため、実行環境によっては管理者権限やファイアウォール設定の許可が必要になる場合があります
+- `27_network_client_server.py` は単体でサーバとクライアントの接続検証を完了し、終了時にサーバスレッドを停止します
+- `29_simple_web_server.py` は独立したWebサーバーとして動作し、ブラウザからアクセス可能です
+- `51_network_security.py` はローカルポートスキャンを行うため、実行環境によっては管理者権限やファイアウォール設定の許可が必要になる場合があります
 
 #### 文字エンコーディング問題
 - Windows環境では一部のファイルでUnicode文字（✓✗）の表示エラーが発生する場合があります
@@ -538,11 +538,11 @@ python 54_intrusion_detection.py
 ## 補助ファイルと修正版について
 
 ### ネットワークプログラミング補助ファイル
-- `socket_programming_basics_23.py`: 27番の英語版（文字化け回避）
-- `27_test_socket_demo.py`: ソケット通信テスト用ファイル
-- `28_simple_web_server.py`: 独立動作可能なWebサーバー
-- `29_email_client_fixed.py`: 添付ファイル処理バグ修正版
-- `30_ftp_client_fixed.py`: Unicode文字問題修正版
+- `socket_programming_basics_jp.py`: 26番の日本語版（文字化け回避のため英語版を推奨）
+- `28_test_socket_demo.py`: ソケット通信テスト用ファイル
+- `29_simple_web_server.py`: 独立動作可能なWebサーバー
+- `30_email_client_fixed.py`: 添付ファイル処理バグ修正版
+- `31_ftp_client_fixed.py`: Unicode文字問題修正版
 
 ### データベース関連情報
 - `setup_postgresql.md`: PostgreSQLセットアップガイド
@@ -558,9 +558,9 @@ python 54_intrusion_detection.py
 4. **ソートアルゴリズム**の比較と分析（14-16）
 5. **データ構造**の効率的な使用方法（17-21）
 6. **グラフアルゴリズムとパス探索**の実装と可視化（22-25）
-7. **ネットワークプログラミング**の基礎と応用（26-35）
-8. **データベース操作**と接続管理（36-38）
-9. **情報セキュリティ**の実践的実装（46-54）
+7. **ネットワークプログラミング**の基礎と応用（26-36）
+8. **データベース操作**と接続管理（37-39）
+9. **情報セキュリティ**の実践的実装（47-55）
 
 ## 全体的な注意事項
 
