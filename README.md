@@ -437,10 +437,16 @@ python 26_socket_programming_basics.py
 python 27_network_client_server.py
 python 29_http_client_server.py
 
-# データベース関連
+# データベース関連（Python）
 python 37_run_database_examples.py
 python 38_test_postgresql_connection.py
 python 39_verify_database_setup.py
+python 59_SQL_python.py
+
+# データベース関連（SQL - psql経由で実行）
+psql -f 56_database_examples.pgsql
+psql -f 57_SQL_tutorial1.psql
+psql -f 58_SQL_tutorial2.psql
 
 # セキュリティ関連
 python 47_security_basics.py
@@ -455,13 +461,27 @@ python 48_input_validation.py
 - 一部のプログラムは外部ライブラリに依存します：
   - `25_graph_visualization.py`: `matplotlib`, `networkx` ライブラリ
   - `48_encryption_basics.py`, `51_secure_communication.py`: `cryptography` ライブラリ
-  - データベース関連ファイル: `psycopg2` または `psycopg2-binary`
+  - データベース関連ファイル（37-39, 59番）: `psycopg2-binary`, `python-dotenv`
+  - SQLファイル（56-58番）: PostgreSQLクライアント（`psql`コマンド）
 
 ```bash
 # 必要なライブラリのインストール
 pip install matplotlib networkx  # グラフ可視化用
-pip install cryptography
-pip install psycopg2-binary  # PostgreSQL用
+pip install cryptography          # 暗号化・セキュリティ用
+pip install psycopg2-binary       # PostgreSQL接続用
+pip install python-dotenv         # 環境変数管理用（59_SQL_python.py）
+```
+
+#### データベース環境の設定（59_SQL_python.py用）
+
+学生管理システム（59_SQL_python.py）を実行する場合、`.env`ファイルに以下の設定が必要です：
+
+```env
+DB_HOST=localhost
+DB_NAME=university_system
+DB_USER=postgres
+DB_PASSWORD=your_password
+DB_PORT=5432
 ```
 
 ### ネットワークプログラミングの実行方法（Windows PowerShell）
@@ -534,6 +554,10 @@ python 55_intrusion_detection.py
 #### データベース関連
 - PostgreSQLサーバーが事前にインストール・設定されている必要があります
 - 接続情報（ホスト、ポート、ユーザー名、パスワード）は各スクリプト内で設定してください
+- **56-58番のSQLファイル**: `psql`コマンドで実行します（例：`psql -U postgres -d university_system -f 56_database_examples.pgsql`）
+- **59_SQL_python.py**: `.env`ファイルに接続情報を設定してから実行してください
+  - 詳細な操作方法は`59_SQL_python_DOC.txt`を参照してください
+  - 対話型メニューで学生・科目の登録、履修管理、統計表示が可能です
 
 ## 補助ファイルと修正版について
 
@@ -546,7 +570,10 @@ python 55_intrusion_detection.py
 
 ### データベース関連情報
 - `setup_postgresql.md`: PostgreSQLセットアップガイド
-- `database_examples.pgsql`: PostgreSQLサンプルコード集
+- `56_database_examples.pgsql`: PostgreSQLサンプルコード集（大学管理システム）
+- `57_SQL_tutorial1.psql`: 主キー・外部キー制約チュートリアル
+- `58_SQL_tutorial2.psql`: サブクエリ総合チュートリアル
+- `59_SQL_python_DOC.txt`: 学生管理システム（59_SQL_python.py）の詳細操作マニュアル
 
 ## 学習目的の更新
 
@@ -573,7 +600,7 @@ python 55_intrusion_detection.py
 
 ## データベースファイル詳細
 
-### database_examples.pgsql
+### 56_database_examples.pgsql
 - **概要**: データベースシステム講義から抽出したPostgreSQLサンプルコード集
 - **内容**: データベース設計とSQL操作の実践例
 - **実装内容**:
@@ -588,5 +615,49 @@ python 55_intrusion_detection.py
   - **セキュリティ**: ユーザー作成、権限管理、行レベルセキュリティ
   - **トランザクション**: ACID特性を保証した安全な操作例
   - **高度なクエリ**: JOIN、サブクエリ、集約関数、WITH句の活用
+
+### 57_SQL_tutorial1.psql
+- **概要**: PostgreSQLの主キーと外部キー制約のチュートリアル
+- **内容**: 参照整合性制約の動作を学ぶ実践的なSQL演習
+- **実装内容**:
+  - **RESTRICT動作**: 参照されているレコードの削除を防ぐ
+  - **CASCADE動作**: 親レコード削除時に子レコードも自動削除
+  - **SET NULL動作**: 親レコード削除時に外部キーをNULLに設定
+  - **複合主キー**: 複数カラムを組み合わせた主キーの実装
+  - **制約違反テスト**: 各種制約の動作確認と検証例
+  - departments、students、courses、enrollmentsテーブルを使用した実例
+
+### 58_SQL_tutorial2.psql
+- **概要**: PostgreSQLのサブクエリ総合チュートリアル
+- **内容**: サブクエリの各種パターンと実践的な使用例
+- **実装内容**:
+  - **単一値サブクエリ**: AVG、MAX、MINを使った比較
+  - **複数値サブクエリ**: IN演算子による複数レコードの検索
+  - **EXISTS演算子**: 存在チェックによる効率的なクエリ
+  - **相関サブクエリ**: 外側のクエリと連動する動的サブクエリ
+  - **SELECT句内サブクエリ**: 計算結果を追加カラムとして表示
+  - **集約関数との組み合わせ**: HAVING句でのサブクエリ活用
+  - **複雑なネストクエリ**: 多段階のサブクエリ実装
+  - **パフォーマンス比較**: サブクエリ vs JOIN の実行効率比較
+  - 10種類以上の実践的なクエリパターンを収録
+
+### 59_SQL_python.py
+- **概要**: PostgreSQLと連携する学生管理システムの完全実装
+- **内容**: psycopg2を使用したデータベース操作のPythonアプリケーション
+- **実装内容**:
+  - **データベース接続管理**: 環境変数からの接続情報読み込み
+  - **CRUD操作**: 学生・科目の追加、更新、削除、検索機能
+  - **トランザクション管理**: 履修登録時の複数テーブル同時更新
+  - **エラーハンドリング**: ロールバック処理と詳細なエラーメッセージ
+  - **対話型メニュー**: コンソールベースのユーザーインターフェース
+  - **主要機能**:
+    - 学生一覧表示（全体・学部別）
+    - 学生登録（GPA、メールアドレス等の管理）
+    - 科目一覧表示・登録・削除
+    - 履修登録（定員チェック、重複登録防止）
+    - 成績統計表示（履修者数、空席状況）
+  - **データ表示機能**: フォーマット整形された表形式の出力
+  - **入力検証**: 履修登録前の科目存在確認、定員チェック
+- **補助ファイル**: `59_SQL_python_DOC.txt`（詳細な操作マニュアル）
 
 
