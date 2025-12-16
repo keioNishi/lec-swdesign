@@ -1,0 +1,132 @@
+-- PostgreSQL Primary Key and Foreign Key Constraints Tutorial - Fixed Version
+
+-- Clean start
+DROP TABLE IF EXISTS course_enrollments CASCADE;
+DROP TABLE IF EXISTS courses CASCADE;
+DROP TABLE IF EXISTS enrollments CASCADE;
+DROP TABLE IF EXISTS students_setnull CASCADE;
+DROP TABLE IF EXISTS students_cascade CASCADE;
+DROP TABLE IF EXISTS students CASCADE;
+DROP TABLE IF EXISTS departments CASCADE;
+
+-- 1. Create base tables
+CREATE TABLE departments (
+    dept_code VARCHAR(10) PRIMARY KEY,
+    dept_name VARCHAR(50) NOT NULL,
+    established_year INTEGER
+);
+
+CREATE TABLE students (
+    student_id CHAR(7) PRIMARY KEY,
+    name VARCHAR(50) NOT NULL,
+    grade INTEGER CHECK (grade BETWEEN 1 AND 4),
+    dept_code VARCHAR(10),
+    gpa DECIMAL(3,2) CHECK (gpa BETWEEN 0.00 AND 4.00),
+    FOREIGN KEY (dept_code) REFERENCES departments(dept_code)
+        ON DELETE RESTRICT
+        ON UPDATE RESTRICT
+);
+
+-- 2. Insert initial data
+INSERT INTO departments VALUES ('CS', 'Computer Science', 1995);
+INSERT INTO departments VALUES ('EC', 'Economics', 1980);
+INSERT INTO departments VALUES ('LA', 'Liberal Arts', 1970);
+
+INSERT INTO students VALUES ('2024001', 'John Smith', 3, 'CS', 3.5);
+INSERT INTO students VALUES ('2024002', 'Jane Doe', 2, 'EC', 3.8);
+INSERT INTO students VALUES ('2024003', 'Bob Johnson', 4, 'CS', 3.2);
+
+-- Check initial state
+SELECT 'Initial Data' as status;
+SELECT s.student_id, s.name, s.dept_code, d.dept_name 
+FROM students s 
+LEFT JOIN departments d ON s.dept_code = d.dept_code;
+
+-- 3. Test RESTRICT behavior
+SELECT 'Testing RESTRICT - this will fail' as status;
+-- This should fail - uncomment to test
+-- DELETE FROM departments WHERE dept_code = 'CS';
+
+-- 4. Test CASCADE behavior
+CREATE TABLE students_cascade (
+    student_id CHAR(7) PRIMARY KEY,
+    name VARCHAR(50) NOT NULL,
+    dept_code VARCHAR(10),
+    FOREIGN KEY (dept_code) REFERENCES departments(dept_code)
+        ON DELETE CASCADE
+);
+
+-- Add test department and students for CASCADE test
+INSERT INTO departments VALUES ('CASC', 'Cascade Test', 2024);
+INSERT INTO students_cascade VALUES ('C001', 'Cascade Test 1', 'CASC');
+INSERT INTO students_cascade VALUES ('C002', 'Cascade Test 2', 'CASC');
+
+-- Before CASCADE
+SELECT 'Before CASCADE' as status;
+SELECT * FROM students_cascade WHERE dept_code = 'CASC';
+
+-- Execute CASCADE delete
+DELETE FROM departments WHERE dept_code = 'CASC';
+
+-- After CASCADE - should be empty
+SELECT 'After CASCADE - should be empty' as status;
+SELECT * FROM students_cascade WHERE dept_code = 'CASC';
+
+-- 5. Test SET NULL behavior
+CREATE TABLE students_setnull (
+    student_id CHAR(7) PRIMARY KEY,
+    name VARCHAR(50) NOT NULL,
+    dept_code VARCHAR(10),
+    FOREIGN KEY (dept_code) REFERENCES departments(dept_code)
+        ON DELETE SET NULL
+);
+
+-- Add test department and students for SET NULL test
+INSERT INTO departments VALUES ('SNULL', 'SetNull Test', 2024);
+INSERT INTO students_setnull VALUES ('S001', 'SetNull Test 1', 'SNULL');
+INSERT INTO students_setnull VALUES ('S002', 'SetNull Test 2', 'SNULL');
+
+-- Before SET NULL
+SELECT 'Before SET NULL' as status;
+SELECT * FROM students_setnull WHERE student_id IN ('S001', 'S002');
+
+-- Execute SET NULL delete
+DELETE FROM departments WHERE dept_code = 'SNULL';
+
+-- After SET NULL - students should remain but dept_code should be NULL
+SELECT 'After SET NULL - dept_code should be NULL' as status;
+SELECT * FROM students_setnull WHERE student_id IN ('S001', 'S002');
+
+-- 6. Composite primary key example
+CREATE TABLE enrollments (
+    student_id CHAR(7),
+    course_code CHAR(6),
+    semester VARCHAR(10),
+    grade CHAR(1),
+    PRIMARY KEY (student_id, course_code, semester),
+    FOREIGN KEY (student_id) REFERENCES students(student_id)
+);
+
+INSERT INTO enrollments VALUES ('2024001', 'CS101', '2024S1', 'A');
+INSERT INTO enrollments VALUES ('2024001', 'CS102', '2024S1', 'B');
+
+-- Test composite key violation - this should fail
+-- INSERT INTO enrollments VALUES ('2024001', 'CS101', '2024S1', 'C');
+
+-- 7. Check final state
+SELECT 'Final Results Summary' as status;
+
+SELECT 'Departments' as table_name;
+SELECT * FROM departments ORDER BY dept_code;
+
+SELECT 'Students' as table_name;
+SELECT * FROM students ORDER BY student_id;
+
+SELECT 'Students Cascade Table' as table_name;
+SELECT * FROM students_cascade;
+
+SELECT 'Students SetNull Table' as table_name;
+SELECT * FROM students_setnull;
+
+SELECT 'Enrollments' as table_name;
+SELECT * FROM enrollments;

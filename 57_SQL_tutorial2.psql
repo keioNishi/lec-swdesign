@@ -1,0 +1,321 @@
+-- PostgreSQL Subquery Tutorial
+
+DROP TABLE IF EXISTS enrollments CASCADE;
+DROP TABLE IF EXISTS students CASCADE;
+DROP TABLE IF EXISTS departments CASCADE;
+DROP TABLE IF EXISTS courses CASCADE;
+
+CREATE TABLE departments (
+    dept_code VARCHAR(10) PRIMARY KEY,
+    dept_name VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE students (
+    student_id VARCHAR(10) PRIMARY KEY,
+    name VARCHAR(50) NOT NULL,
+    grade INTEGER,
+    dept_code VARCHAR(10),
+    gpa DECIMAL(3,2)
+);
+
+CREATE TABLE courses (
+    course_code VARCHAR(10) PRIMARY KEY,
+    course_name VARCHAR(50) NOT NULL,
+    credits INTEGER
+);
+
+CREATE TABLE enrollments (
+    student_id VARCHAR(10),
+    course_code VARCHAR(10),
+    semester VARCHAR(10),
+    grade CHAR(1),
+    PRIMARY KEY (student_id, course_code, semester)
+);
+
+INSERT INTO departments VALUES 
+    ('CS', 'Computer Science'),
+    ('EC', 'Economics'),
+    ('LA', 'Liberal Arts');
+
+INSERT INTO students VALUES 
+    ('2024001', 'John Smith', 3, 'CS', 3.8),
+    ('2024002', 'Jane Doe', 2, 'EC', 3.2),
+    ('2024003', 'Bob Johnson', 4, 'CS', 3.6),
+    ('2024004', 'Alice Brown', 1, 'LA', 2.9),
+    ('2024005', 'Charlie Davis', 2, 'CS', 3.4),
+    ('2024006', 'Eva Wilson', 3, 'EC', 3.9);
+
+INSERT INTO courses VALUES 
+    ('CS101', 'Programming Basics', 3),
+    ('CS201', 'Database Theory', 3),
+    ('EC101', 'Economics Intro', 2),
+    ('LA101', 'Literature', 2),
+    ('MATH01', 'Mathematics', 3);
+
+INSERT INTO enrollments VALUES 
+    ('2024001', 'CS101', '2024S1', 'A'),
+    ('2024001', 'CS201', '2024S1', 'B'),
+    ('2024002', 'EC101', '2024S1', 'A'),
+    ('2024003', 'CS101', '2024S1', 'B'),
+    ('2024003', 'CS201', '2024S1', 'A'),
+    ('2024004', 'LA101', '2024S1', 'A'),
+    ('2024005', 'CS101', '2024S1', 'C'),
+    ('2024006', 'EC101', '2024S1', 'A');
+
+SELECT 'INITIAL DATA' as info;
+SELECT 'Students' as table_name;
+SELECT student_id, name, grade, dept_code, gpa FROM students ORDER BY student_id;
+
+SELECT 'Enrollments' as table_name;
+SELECT student_id, course_code, semester, grade FROM enrollments ORDER BY student_id;
+
+SELECT '1. SINGLE VALUE SUBQUERIES' as info;
+
+SELECT 'Average GPA of all students' as description;
+SELECT AVG(gpa) as average_gpa FROM students;
+
+SELECT 'Students with GPA higher than average' as description;
+SELECT student_id, name, gpa
+FROM students 
+WHERE gpa > (SELECT AVG(gpa) FROM students)
+ORDER BY gpa DESC;
+
+SELECT 'Student with highest GPA' as description;
+SELECT student_id, name, gpa
+FROM students 
+WHERE gpa = (SELECT MAX(gpa) FROM students);
+
+SELECT 'Students with GPA higher than CS department average' as description;
+SELECT student_id, name, gpa, dept_code
+FROM students 
+WHERE gpa > (SELECT AVG(gpa) FROM students WHERE dept_code = 'CS')
+ORDER BY gpa DESC;
+
+SELECT '2. MULTIPLE VALUE SUBQUERIES with IN' as info;
+
+SELECT 'Students enrolled in CS101' as description;
+SELECT student_id, name, grade 
+FROM students
+WHERE student_id IN (
+    SELECT student_id 
+    FROM enrollments 
+    WHERE course_code = 'CS101'
+)
+ORDER BY student_id;
+
+SELECT 'Students enrolled in Database Theory' as description;
+SELECT student_id, name, grade 
+FROM students
+WHERE student_id IN (
+    SELECT e.student_id 
+    FROM enrollments e
+    INNER JOIN courses c ON e.course_code = c.course_code
+    WHERE c.course_name = 'Database Theory'
+)
+ORDER BY student_id;
+
+SELECT 'Students NOT enrolled in any course' as description;
+SELECT student_id, name, grade 
+FROM students
+WHERE student_id NOT IN (
+    SELECT DISTINCT student_id 
+    FROM enrollments
+    WHERE student_id IS NOT NULL
+)
+ORDER BY student_id;
+
+SELECT '3. EXISTS OPERATOR EXAMPLES' as info;
+
+SELECT 'Students who have enrollments (using EXISTS)' as description;
+SELECT s.student_id, s.name 
+FROM students s
+WHERE EXISTS (
+    SELECT 1 
+    FROM enrollments e 
+    WHERE e.student_id = s.student_id
+)
+ORDER BY s.student_id;
+
+SELECT 'Students who have NO enrollments (using NOT EXISTS)' as description;
+SELECT s.student_id, s.name 
+FROM students s
+WHERE NOT EXISTS (
+    SELECT 1 
+    FROM enrollments e 
+    WHERE e.student_id = s.student_id
+)
+ORDER BY s.student_id;
+
+SELECT 'Courses that have enrollments (using EXISTS)' as description;
+SELECT c.course_code, c.course_name 
+FROM courses c
+WHERE EXISTS (
+    SELECT 1 
+    FROM enrollments e 
+    WHERE e.course_code = c.course_code
+)
+ORDER BY c.course_code;
+
+SELECT 'Courses with NO enrollments (using NOT EXISTS)' as description;
+SELECT c.course_code, c.course_name 
+FROM courses c
+WHERE NOT EXISTS (
+    SELECT 1 
+    FROM enrollments e 
+    WHERE e.course_code = c.course_code
+)
+ORDER BY c.course_code;
+
+SELECT '4. CORRELATED SUBQUERIES' as info;
+
+SELECT 'Students with above-average GPA in their department' as description;
+SELECT s1.student_id, s1.name, s1.dept_code, s1.gpa
+FROM students s1
+WHERE s1.gpa > (
+    SELECT AVG(s2.gpa)
+    FROM students s2
+    WHERE s2.dept_code = s1.dept_code
+)
+ORDER BY s1.dept_code, s1.gpa DESC;
+
+SELECT 'Count of students with higher GPA in same department' as description;
+SELECT s1.student_id, s1.name, s1.dept_code, s1.gpa,
+    (SELECT COUNT(*)
+     FROM students s2
+     WHERE s2.dept_code = s1.dept_code
+     AND s2.gpa > s1.gpa) as students_with_higher_gpa
+FROM students s1
+ORDER BY s1.dept_code, s1.gpa DESC;
+
+SELECT '5. SUBQUERIES IN SELECT CLAUSE' as info;
+
+SELECT 'Student info with department average GPA' as description;
+SELECT s.student_id, s.name, s.gpa,
+    (SELECT AVG(s2.gpa) 
+     FROM students s2 
+     WHERE s2.dept_code = s.dept_code) as dept_avg_gpa,
+    (SELECT d.dept_name 
+     FROM departments d 
+     WHERE d.dept_code = s.dept_code) as dept_name
+FROM students s
+ORDER BY s.dept_code, s.student_id;
+
+SELECT '6. SUBQUERIES WITH AGGREGATION' as info;
+
+SELECT 'Departments with above-average number of students' as description;
+SELECT dept_code, 
+    (SELECT dept_name FROM departments d WHERE d.dept_code = s.dept_code) as dept_name,
+    COUNT(*) as student_count,
+    (SELECT COUNT(*) / COUNT(DISTINCT dept_code) FROM students) as avg_students_per_dept
+FROM students s
+GROUP BY dept_code
+HAVING COUNT(*) > (
+    SELECT COUNT(*) / COUNT(DISTINCT dept_code) 
+    FROM students
+)
+ORDER BY student_count DESC;
+
+SELECT 'Students with more enrollments than average' as description;
+SELECT s.student_id, s.name,
+    (SELECT COUNT(*) 
+     FROM enrollments e 
+     WHERE e.student_id = s.student_id) as enrollment_count,
+    (SELECT AVG(enrollment_count)
+     FROM (SELECT COUNT(*) as enrollment_count
+           FROM enrollments 
+           GROUP BY student_id) as avg_calc) as avg_enrollments
+FROM students s
+WHERE (SELECT COUNT(*) FROM enrollments e WHERE e.student_id = s.student_id) > 
+      (SELECT AVG(enrollment_count)
+       FROM (SELECT COUNT(*) as enrollment_count
+             FROM enrollments 
+             GROUP BY student_id) as avg_calc)
+ORDER BY s.student_id;
+
+SELECT '7. COMPLEX NESTED SUBQUERIES' as info;
+
+SELECT 'Students in departments with highest average GPA' as description;
+SELECT student_id, name, dept_code, gpa
+FROM students
+WHERE dept_code = (
+    SELECT dept_code
+    FROM students
+    GROUP BY dept_code
+    ORDER BY AVG(gpa) DESC
+    LIMIT 1
+)
+ORDER BY gpa DESC;
+
+SELECT 'Top performing student in each department' as description;
+SELECT s1.student_id, s1.name, s1.dept_code, s1.gpa
+FROM students s1
+WHERE s1.gpa = (
+    SELECT MAX(s2.gpa)
+    FROM students s2
+    WHERE s2.dept_code = s1.dept_code
+)
+ORDER BY s1.dept_code;
+
+SELECT '8. COMPARISON: SUBQUERY vs JOIN' as info;
+
+SELECT 'Using SUBQUERY: Students enrolled in CS101' as method;
+SELECT student_id, name 
+FROM students
+WHERE student_id IN (
+    SELECT student_id 
+    FROM enrollments 
+    WHERE course_code = 'CS101'
+)
+ORDER BY student_id;
+
+SELECT 'Using JOIN: Students enrolled in CS101' as method;
+SELECT DISTINCT s.student_id, s.name 
+FROM students s
+INNER JOIN enrollments e ON s.student_id = e.student_id
+WHERE e.course_code = 'CS101'
+ORDER BY s.student_id;
+
+SELECT '9. PRACTICAL EXAMPLES' as info;
+
+SELECT 'Find students who are taking all CS courses' as description;
+SELECT s.student_id, s.name
+FROM students s
+WHERE NOT EXISTS (
+    SELECT c.course_code
+    FROM courses c
+    WHERE c.course_code LIKE 'CS%'
+    AND NOT EXISTS (
+        SELECT e.course_code
+        FROM enrollments e
+        WHERE e.student_id = s.student_id
+        AND e.course_code = c.course_code
+    )
+)
+ORDER BY s.student_id;
+
+SELECT 'Department enrollment summary' as description;
+SELECT 
+    d.dept_code,
+    d.dept_name,
+    (SELECT COUNT(*) FROM students s WHERE s.dept_code = d.dept_code) as total_students,
+    (SELECT COUNT(DISTINCT e.student_id) 
+     FROM enrollments e 
+     INNER JOIN students s ON e.student_id = s.student_id 
+     WHERE s.dept_code = d.dept_code) as enrolled_students
+FROM departments d
+ORDER BY d.dept_code;
+
+SELECT '10. PERFORMANCE COMPARISON' as info;
+SELECT 'Row counts for different approaches' as info;
+
+SELECT 'IN subquery count' as method, COUNT(*) as result_count
+FROM students
+WHERE student_id IN (SELECT student_id FROM enrollments WHERE course_code = 'CS101')
+UNION ALL
+SELECT 'EXISTS subquery count', COUNT(*)
+FROM students s
+WHERE EXISTS (SELECT 1 FROM enrollments e WHERE e.student_id = s.student_id AND e.course_code = 'CS101')
+UNION ALL
+SELECT 'JOIN count', COUNT(DISTINCT s.student_id)
+FROM students s INNER JOIN enrollments e ON s.student_id = e.student_id
+WHERE e.course_code = 'CS101';
